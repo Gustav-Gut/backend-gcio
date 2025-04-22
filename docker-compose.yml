@@ -29,5 +29,5 @@ volumes:
 
 networks:
   kong-net:
-    name: kong-pvi_kong-net
-    external: true
+    name: kong-net
+    driver: bridge
