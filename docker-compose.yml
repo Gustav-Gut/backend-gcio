@@ -1,0 +1,33 @@
+services:
+  web:
+    build: .
+    command: ./wait-for-db.sh db python manage.py runserver 0.0.0.0:8002
+    volumes:
+      - .:/app
+    ports:
+      - "8002:8002"
+    depends_on:
+      - db
+    env_file:
+      - .env
+    networks:
+      - kong-net
+  db:
+    image: mariadb:11.4
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - kong-net
+
+volumes:
+  db_data:
+
+networks:
+  kong-net:
+    name: kong-pvi_kong-net
+    external: true
