@@ -43,7 +43,9 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'rest_framework_simplejwt',
     'authentication',
-    'seed'
+    'seed',
+    'user',
+    'bookmark'
 ]
 
 MIDDLEWARE = [
@@ -156,6 +158,12 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'Documentación de mi API REST con DRF y drf-spectacular',
     'VERSION': '1.0.0',
     # Otras opciones de configuración según tus necesidades
+    'SERVE_INCLUDE_SCHEMA': False,  # Añade esta línea
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': r'/api/',
+    'TAG_PLUGINS': [
+        'drf_spectacular.contrib.django_filters.DjangoFilterExtension',
+    ],
 }
 
 SIMPLE_JWT = {
