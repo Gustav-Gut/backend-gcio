@@ -1,10 +1,24 @@
 from django.shortcuts import render
+from bookmark.services import (
+    BookmarkValidationService,
+    BookmarkRetrievalService,
+    BookmarkProcessingService,
+    BookmarkUpdatingService,
+)
+from .schemas import (
+    list_bookmarks_schema,
+    create_bookmark_schema,
+    update_bookmark_schema,
+    delete_bookmark_schema
+)
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from .models import Bookmark,Action
 from .serializers import BookmarkSerializer, ActionSerializer
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.types import OpenApiTypes
 
 class BookmarkPagination(PageNumberPagination):
     page_size = 10
@@ -13,40 +27,23 @@ class BookmarkPagination(PageNumberPagination):
 
 class BookmarkAPIView(viewsets.ViewSet):
   
+    @extend_schema(**list_bookmarks_schema)
     @action(detail=False, methods=['get'], url_path='list')
     def list_bookmarks(self, request):
         user_id = request.query_params.get('user_id')
         
-        if not user_id:
+        # 1. Validación
+        if not BookmarkValidationService.validate_user_id(user_id):
             return Response({"error": "User ID parameter is required"}, 
                         status=status.HTTP_400_BAD_REQUEST)
         
-      
-        bookmarks = Bookmark.objects.filter(client_rut=user_id, status=1).select_related(
-            'action', 'external_source'
-        )
+        # 2. Obtención de datos
+        bookmarks = BookmarkRetrievalService.get_user_bookmarks(user_id)
         
-        result = []
+        # 3. Procesamiento de datos
+        result = BookmarkProcessingService.process_bookmarks_with_actions(bookmarks)
         
-        for bookmark in bookmarks:
-            bookmark_data = BookmarkSerializer(bookmark).data
-            
-            if bookmark.external_source:
-               
-                related_actions = Action.objects.filter(
-                    fk_external_source=bookmark.external_source,
-                    status=1
-                )
-                bookmark_data['actions'] = ActionSerializer(related_actions, many=True).data
-            
-                if 'action' in bookmark_data:
-                   del bookmark_data['action']
-            else:
-                return Response({"error": "No external source associated with this bookmark"}, 
-                                status=status.HTTP_400_BAD_REQUEST)
-            
-            result.append(bookmark_data)
-        
+        # 4. Paginación
         paginator = BookmarkPagination()
         page = paginator.paginate_queryset(result, request)
         
@@ -56,7 +53,7 @@ class BookmarkAPIView(viewsets.ViewSet):
         return Response(result)
 
 
- 
+    @extend_schema(**create_bookmark_schema)
     @action(detail=False, methods=['post'], url_path='create')
     def create_bookmark(self, request):
         serializer = BookmarkSerializer(data=request.data)
@@ -66,7 +63,7 @@ class BookmarkAPIView(viewsets.ViewSet):
             return Response({"id": bookmark.id}, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+    @extend_schema(**update_bookmark_schema)
     @action(detail=False, methods=['patch'], url_path='update/(?P<pk>[^/.]+)')
     def update_bookmark(self, request, pk=None):
         try:
@@ -100,3 +97,21 @@ class BookmarkAPIView(viewsets.ViewSet):
             )
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @extend_schema(**delete_bookmark_schema)
+    @action(detail=False, methods=['delete'], url_path='delete/(?P<id>[^/.]+)')
+    def delete_bookmark(self, request, id=None):
+        """
+        Realiza un soft delete de un bookmark cambiando su estado a inactivo.
+        """
+        success, error_msg = BookmarkUpdatingService.soft_delete_bookmark(pk)
+        
+        if success:
+            return Response(
+                {"message": "Bookmark deleted successfully"},
+                status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {"error": error_msg},
+                status=status.HTTP_404_NOT_FOUND
+            )
