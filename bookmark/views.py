@@ -5,12 +5,7 @@ from bookmark.services import (
     BookmarkProcessingService,
     BookmarkUpdatingService,
 )
-from .schemas import (
-    list_bookmarks_schema,
-    create_bookmark_schema,
-    update_bookmark_schema,
-    delete_bookmark_schema
-)
+from . import schemas
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -27,7 +22,7 @@ class BookmarkPagination(PageNumberPagination):
 
 class BookmarkAPIView(viewsets.ViewSet):
   
-    @extend_schema(**list_bookmarks_schema)
+    @extend_schema(**schemas.list_bookmarks_schema)
     @action(detail=False, methods=['get'], url_path='list')
     def list_bookmarks(self, request):
         user_id = request.query_params.get('user_id')
@@ -53,7 +48,7 @@ class BookmarkAPIView(viewsets.ViewSet):
         return Response(result)
 
 
-    @extend_schema(**create_bookmark_schema)
+    @extend_schema(**schemas.create_bookmark_schema)
     @action(detail=False, methods=['post'], url_path='create')
     def create_bookmark(self, request):
         serializer = BookmarkSerializer(data=request.data)
@@ -63,11 +58,12 @@ class BookmarkAPIView(viewsets.ViewSet):
             return Response({"id": bookmark.id}, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    @extend_schema(**update_bookmark_schema)
-    @action(detail=False, methods=['patch'], url_path='update/(?P<pk>[^/.]+)')
-    def update_bookmark(self, request, pk=None):
+    
+    @extend_schema(**schemas.update_bookmark_schema)
+    @action(detail=False, methods=['patch'], url_path='update/(?P<id>[^/.]+)')
+    def update_bookmark(self, request, id=None):
         try:
-            bookmark = Bookmark.objects.get(pk=pk)
+            bookmark = Bookmark.objects.get(id=id)
         except Bookmark.DoesNotExist:
             return Response({"error": "Bookmark not found"}, 
                         status=status.HTTP_404_NOT_FOUND)
@@ -97,13 +93,14 @@ class BookmarkAPIView(viewsets.ViewSet):
             )
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    @extend_schema(**delete_bookmark_schema)
+    
+    @extend_schema(**schemas.delete_bookmark_schema)
     @action(detail=False, methods=['delete'], url_path='delete/(?P<id>[^/.]+)')
     def delete_bookmark(self, request, id=None):
         """
         Realiza un soft delete de un bookmark cambiando su estado a inactivo.
         """
-        success, error_msg = BookmarkUpdatingService.soft_delete_bookmark(pk)
+        success, error_msg = BookmarkUpdatingService.soft_delete_bookmark(id)
         
         if success:
             return Response(

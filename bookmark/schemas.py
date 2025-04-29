@@ -103,7 +103,7 @@ update_bookmark_schema = {
     "description": "Updates specified fields of an existing bookmark",
     "parameters": [
         OpenApiParameter(
-            name="pk",
+            name="id",
             description="Bookmark ID",
             required=True,
             type=OpenApiTypes.INT,

@@ -12,9 +12,26 @@ class ActionSerializer(serializers.ModelSerializer):
         fields = ['id', 'category', 'result', 'icon', 'color', 'sections', 'status']
 
 class BookmarkSerializer(serializers.ModelSerializer):
-    action = ActionSerializer(read_only=True)
-    external_source = ExternalSourceSerializer(read_only=True)
+    external_source_id = serializers.IntegerField(write_only=True, required=False)
+    action_id = serializers.IntegerField(write_only=True, required=False)
     
     class Meta:
         model = Bookmark
-        fields = ['id', 'url', 'title', 'client_rut', 'action', 'external_source', 'status']
+        fields = ['id', 'url', 'title', 'client_rut', 'status', 'external_source', 
+                  'action', 'external_source_id', 'action_id']
+        read_only_fields = ['id']
+    
+    def create(self, validated_data):
+        external_source_id = validated_data.pop('external_source_id', None)
+        action_id = validated_data.pop('action_id', None)
+        
+        bookmark = Bookmark(**validated_data)
+        
+        if external_source_id:
+            bookmark.external_source_id = external_source_id
+        
+        if action_id:
+            bookmark.action_id = action_id
+        
+        bookmark.save()
+        return bookmark

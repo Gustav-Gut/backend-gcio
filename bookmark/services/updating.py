@@ -36,7 +36,7 @@ class BookmarkUpdatingService:
             tuple: (success, error_msg)
         """
         try:
-            bookmark = Bookmark.objects.get(pk=bookmark_id)
+            bookmark = Bookmark.objects.get(id=bookmark_id)
             bookmark.status = False
             bookmark.save()
             return True, None

@@ -1,0 +1,4 @@
+from .services.validation import BookmarkValidationService
+from .services.retrieval import BookmarkRetrievalService
+from .services.processing import BookmarkProcessingService
+from .services.updating import BookmarkUpdatingService
