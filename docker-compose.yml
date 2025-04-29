@@ -23,6 +23,17 @@ services:
       - db_data:/var/lib/mysql
     networks:
       - kong-net
+  tests:
+    build: .
+    command: ["sh", "-c", "./wait-for-db.sh db && pytest"]
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    env_file:
+      - .env
+    networks:
+      - kong-net
 
 volumes:
   db_data:

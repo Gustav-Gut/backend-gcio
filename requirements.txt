@@ -5,3 +5,8 @@ drf-spectacular==0.28.0
 djangorestframework-simplejwt==5.5.0
 markdown==3.7
 mysqlclient==2.2.7
+
+# Dependencias de testing
+pytest>=7.0
+pytest-django>=4.5
+pytest-cov>=4.0
