@@ -1,4 +1,5 @@
 from django.shortcuts import render
+import uuid
 from bookmark.services import (
     BookmarkValidationService,
     BookmarkRetrievalService,
@@ -50,14 +51,14 @@ class BookmarkAPIView(viewsets.ViewSet):
 
     @extend_schema(**schemas.create_bookmark_schema)
     @action(detail=False, methods=['post'], url_path='create')
-    def create_bookmark(self, request):
-        serializer = BookmarkSerializer(data=request.data)
+    def create_bookmark(self, request): 
+        data = request.data.copy()
+        bookmark, errors, status_code = BookmarkUpdatingService.create_bookmark(data)
         
-        if serializer.is_valid():
-            bookmark = serializer.save()
-            return Response({"id": bookmark.id}, status=status.HTTP_201_CREATED)
+        if bookmark:
+            return Response({"id": bookmark.id}, status=status_code)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(errors, status=status_code)
     
     @extend_schema(**schemas.update_bookmark_schema)
     @action(detail=False, methods=['patch'], url_path='update/(?P<id>[^/.]+)')
@@ -95,7 +96,7 @@ class BookmarkAPIView(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @extend_schema(**schemas.delete_bookmark_schema)
-    @action(detail=False, methods=['delete'], url_path='delete/(?P<id>[^/.]+)')
+    @action(detail=False, methods=['delete'], url_path='delete/(?P<id>[^/.]+)/')
     def delete_bookmark(self, request, id=None):
         """
         Realiza un soft delete de un bookmark cambiando su estado a inactivo.

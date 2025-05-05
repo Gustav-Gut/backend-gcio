@@ -9,15 +9,15 @@ class ExternalSourceSerializer(serializers.ModelSerializer):
 class ActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Action
-        fields = ['id', 'category', 'result', 'icon', 'color', 'sections', 'status']
+        fields = ['id', 'category', 'result', 'icon', 'color', 'status']
 
 class BookmarkSerializer(serializers.ModelSerializer):
-    external_source_id = serializers.IntegerField(write_only=True, required=False)
-    action_id = serializers.IntegerField(write_only=True, required=False)
+    external_source_id = serializers.UUIDField(write_only=True, required=False)
+    action_id = serializers.UUIDField(write_only=True, required=False)
     
     class Meta:
         model = Bookmark
-        fields = ['id', 'url', 'title', 'client_rut', 'status', 'external_source', 
+        fields = ['id', 'url', 'title', 'client_id', 'status', 'external_source', 
                   'action', 'external_source_id', 'action_id']
         read_only_fields = ['id']
     

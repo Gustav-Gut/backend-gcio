@@ -31,7 +31,6 @@ list_bookmarks_schema = {
     ],
     "responses": {
         200: BookmarkSerializer(many=True),
-    
     },
     "examples": [
         OpenApiExample(
@@ -42,13 +41,13 @@ list_bookmarks_schema = {
                 "previous": None,
                 "results": [
                     {
-                        "id": 1,
+                        "id": "123e4567-e89b-12d3-a456-426614174000",
                         "title": "Example Bookmark",
                         "url": "https://example.com",
-                        "client_rut": "12345678",
+                        "client_id": "12345678",
                         "actions": [
                             {
-                                "id": 1,
+                                "id": "123e4567-e89b-12d3-a456-426614174001",
                                 "category": "Category",
                                 "result": "Result",
                                 "icon": "icon-name",
@@ -68,7 +67,7 @@ list_bookmarks_schema = {
 # Esquema para create_bookmark
 create_bookmark_schema = {
     "summary": "Create a new bookmark",
-    "description": "Creates a new bookmark and returns its ID",
+    "description": "Creates a new bookmark and returns its ID (UUID)",
     "request": BookmarkSerializer,
     "responses": {
         201: OpenApiTypes.OBJECT,
@@ -80,9 +79,9 @@ create_bookmark_schema = {
             value={
                 "url": "https://example.com",
                 "title": "New Bookmark",
-                "client_rut": "12345678",
-                "external_source_id": 1,
-                "action_id": 2,
+                "client_id": "12345678",
+                "external_source_id": "123e4567-e89b-12d3-a456-426614174002",
+                "action_id": "123e4567-e89b-12d3-a456-426614174003",
                 "status": True
             },
             request_only=True,
@@ -90,7 +89,7 @@ create_bookmark_schema = {
         OpenApiExample(
             "Success Response",
             value={
-                "id": 123
+                "id": "123e4567-e89b-12d3-a456-426614174004"
             },
             response_only=True,
         )
@@ -104,9 +103,9 @@ update_bookmark_schema = {
     "parameters": [
         OpenApiParameter(
             name="id",
-            description="Bookmark ID",
+            description="Bookmark ID (UUID)",
             required=True,
-            type=OpenApiTypes.INT,
+            type=OpenApiTypes.STR,
             location=OpenApiParameter.PATH
         ),
     ],
@@ -122,7 +121,8 @@ update_bookmark_schema = {
             value={
                 "title": "Updated Title",
                 "url": "https://updated-example.com",
-                "status": True
+                "status": True,
+                "action_id": "123e4567-e89b-12d3-a456-426614174005"
             },
             request_only=True,
         ),
@@ -143,9 +143,9 @@ delete_bookmark_schema = {
     "parameters": [
         OpenApiParameter(
             name="id",
-            description="Bookmark ID to delete",
+            description="Bookmark ID (UUID) to delete",
             required=True,
-            type=OpenApiTypes.INT,
+            type=OpenApiTypes.STR,
             location=OpenApiParameter.PATH
         ),
     ],

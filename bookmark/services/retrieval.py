@@ -4,7 +4,7 @@ class BookmarkRetrievalService:
     @staticmethod
     def get_user_bookmarks(user_id):
         """Obtiene los bookmarks activos del usuario"""
-        return Bookmark.objects.filter(client_rut=user_id, status=1).select_related(
+        return Bookmark.objects.filter(client_id=user_id, status=1).select_related(
             'action', 'external_source'
         )
 

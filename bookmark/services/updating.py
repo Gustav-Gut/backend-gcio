@@ -1,7 +1,38 @@
+import uuid
 from bookmark.models import Bookmark
 from ..serializers import BookmarkSerializer  # Updated relative import
 
 class BookmarkUpdatingService:
+    @staticmethod
+    def create_bookmark(data):
+        """
+        Crea un nuevo bookmark con validación de UUIDs.     
+        Returns:
+            tuple: (bookmark, error_msg, status_code)
+        """
+
+        if 'id' not in data:
+            data['id'] = str(uuid.uuid4())
+            u
+        if 'external_source_id' in data and data['external_source_id']:
+            try:
+                uuid.UUID(str(data['external_source_id']))
+            except ValueError:
+                return None, "Invalid external_source_id format. Must be a valid UUID.", 400
+                
+        if 'action_id' in data and data['action_id']:
+            try:
+                uuid.UUID(str(data['action_id']))
+            except ValueError:
+                return None, "Invalid action_id format. Must be a valid UUID.", 400
+        
+        serializer = BookmarkSerializer(data=data)
+        if serializer.is_valid():
+            bookmark = serializer.save()
+            return bookmark, None, 201
+        
+        return None, serializer.errors, 400
+
     @staticmethod
     def filter_updateable_fields(data):
         """Filtra los campos permitidos para actualizar un bookmark"""
