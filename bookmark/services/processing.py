@@ -1,46 +1,46 @@
-from ..serializers import BookmarkSerializer, ActionSerializer
-from ..models import Action  # Updated relative import
-
 class BookmarkProcessingService:
     @staticmethod
     def process_bookmarks_with_actions(bookmarks):
-        """Procesa bookmarks para incluir acciones relacionadas"""
-        result = []
+        """
+        Procesa bookmarks incluyendo su acción relacionada.
         
-        # Recopilar IDs de fuentes externas para optimizar consultas
-        external_source_ids = set()
+        Args:
+            bookmarks: QuerySet de bookmarks a procesar
+            
+        Returns:
+            list: Lista de bookmarks procesados con su acción
+        """
+        result = []  # Inicializar la lista de resultados
+        
+        # Verificar que bookmarks no sea None
+        if bookmarks is None:
+            return result
+        
         for bookmark in bookmarks:
-            if bookmark.external_source:
-                external_source_ids.add(bookmark.external_source.id)
         
-        # Consultar todas las acciones relevantes de una vez
-        all_actions = {}
-        if external_source_ids:
-            actions_list = Action.objects.filter(
-                fk_external_source_id__in=external_source_ids,
-                status=1
-            )
+            bookmark_data = {
+                "id": str(bookmark.id),
+                "title": bookmark.title,
+                "url": bookmark.url,
+                "client_id": bookmark.client_id,
+                "status": bookmark.status,
+                "created_at": bookmark.created_at,
+                "updated_at": bookmark.updated_at,
+                "action": None  # Valor por defecto
+            }
             
-            # Agrupar por external_source_id para acceso eficiente
-            for action in actions_list:
-                source_id = action.fk_external_source_id
-                if source_id not in all_actions:
-                    all_actions[source_id] = []
-                all_actions[source_id].append(action)
+            # Agregar acción si existe
+            if hasattr(bookmark, 'action') and bookmark.action:
+                action = bookmark.action
+                bookmark_data["action"] = {
+                    "id": str(action.id),
+                    "category": action.category,
+                    "result": action.result,
+                    "icon": action.icon,
+                    "color": action.color,
+                    "status": action.status
+                }
+            
+            result.append(bookmark_data)
         
-        # Procesar cada bookmark
-        for bookmark in bookmarks:
-            bookmark_data = BookmarkSerializer(bookmark).data
-            
-            if bookmark.external_source:
-                source_id = bookmark.external_source.id
-                if source_id in all_actions:
-                    related_actions = all_actions[source_id]
-                    bookmark_data['actions'] = ActionSerializer(related_actions, many=True).data
-                    
-                    if 'action' in bookmark_data:
-                        del bookmark_data['action']
-                    
-                    result.append(bookmark_data)
-            
         return result

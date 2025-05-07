@@ -17,8 +17,8 @@ class BookmarkSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Bookmark
-        fields = ['id', 'url', 'title', 'client_id', 'status', 'external_source', 
-                  'action', 'external_source_id', 'action_id']
+        fields = ['id', 'url', 'title', 'client_id', 'status',  
+                  'external_source_id', 'action_id','created_at', 'updated_at']
         read_only_fields = ['id']
     
     def create(self, validated_data):

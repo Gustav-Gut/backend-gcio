@@ -1,6 +1,8 @@
 import uuid
+from rest_framework import status
 from bookmark.models import Bookmark
-from ..serializers import BookmarkSerializer  # Updated relative import
+from ..serializers import BookmarkSerializer  
+from ..services import BookmarkValidationService# Updated relative import
 
 class BookmarkUpdatingService:
     @staticmethod
@@ -10,10 +12,11 @@ class BookmarkUpdatingService:
         Returns:
             tuple: (bookmark, error_msg, status_code)
         """
-
-        if 'id' not in data:
-            data['id'] = str(uuid.uuid4())
-            u
+        required_fields = ['client_id', 'external_source_id', 'action_id']
+        is_valid, error = BookmarkValidationService.validate_required_fields(data, required_fields)
+        if not is_valid:
+            return None, error, 400
+        
         if 'external_source_id' in data and data['external_source_id']:
             try:
                 uuid.UUID(str(data['external_source_id']))
@@ -46,28 +49,46 @@ class BookmarkUpdatingService:
         return data_to_update
 
     @staticmethod
-    def update_bookmark(bookmark, data):
-        """Actualiza un bookmark con los datos filtrados"""
-        serializer = BookmarkSerializer(bookmark, data=data, partial=True)
-        
-        if serializer.is_valid():
-            updated_bookmark = serializer.save()
-            return updated_bookmark, None
-        else:
-            return None, serializer.errors
-    @staticmethod
-    def soft_delete_bookmark(bookmark_id):
+    def update_bookmark(bookmark_id, data):
         """
-        Realiza un soft delete de un bookmark por su ID.
+        Actualiza un bookmark existente después de validación.
         
         Args:
-            bookmark_id: ID del bookmark a eliminar
+            bookmark_id: ID del bookmark a actualizar
+            data: Datos a actualizar
             
         Returns:
-            tuple: (success, error_msg)
+            tuple: (success, result, status_code)
+                - success: Boolean indicando si la operación fue exitosa
+                - result: Respuesta exitosa o mensaje de error
+                - status_code: Código HTTP apropiado
         """
+        
+        # 1. Validar solicitud
+        success, validation_result, status_code = BookmarkValidationService.validate_update_request(
+            bookmark_id, data
+        )
+        
+        if not success:
+            return False, validation_result, status_code
+        
+        # 2. Actualizar el bookmark
+        bookmark = validation_result["bookmark"]
+        filtered_data = validation_result["data"]
+        
+        serializer = BookmarkSerializer(bookmark, data=filtered_data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return True, {"message": "Bookmark updated successfully"}, status.HTTP_200_OK
+    
+         # 3. Manejar errores de validación del serializador
+        return False, serializer.errors, status.HTTP_400_BAD_REQUEST
+    @staticmethod
+    def soft_delete_bookmark(bookmark_id):
+        """Realiza un soft delete de un bookmark cambiando su estado a inactivo."""
         try:
-            bookmark = Bookmark.objects.get(id=bookmark_id)
+            bookmark = Bookmark.objects.get(pk=bookmark_id)
             bookmark.status = False
             bookmark.save()
             return True, None

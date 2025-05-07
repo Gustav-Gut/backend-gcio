@@ -1,5 +1,4 @@
 from django.shortcuts import render
-import uuid
 from bookmark.services import (
     BookmarkValidationService,
     BookmarkRetrievalService,
@@ -10,45 +9,14 @@ from . import schemas
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
 from .models import Bookmark,Action
 from .serializers import BookmarkSerializer, ActionSerializer
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
-from drf_spectacular.types import OpenApiTypes
-
-class BookmarkPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-class BookmarkAPIView(viewsets.ViewSet):
-  
-    @extend_schema(**schemas.list_bookmarks_schema)
-    @action(detail=False, methods=['get'], url_path='list')
-    def list_bookmarks(self, request):
-        user_id = request.query_params.get('user_id')
-        
-        # 1. Validación
-        if not BookmarkValidationService.validate_user_id(user_id):
-            return Response({"error": "User ID parameter is required"}, 
-                        status=status.HTTP_400_BAD_REQUEST)
-        
-        # 2. Obtención de datos
-        bookmarks = BookmarkRetrievalService.get_user_bookmarks(user_id)
-        
-        # 3. Procesamiento de datos
-        result = BookmarkProcessingService.process_bookmarks_with_actions(bookmarks)
-        
-        # 4. Paginación
-        paginator = BookmarkPagination()
-        page = paginator.paginate_queryset(result, request)
-        
-        if page is not None:
-            return paginator.get_paginated_response(page)
-            
-        return Response(result)
+from .pagination import PaginationMixin
 
 
+
+class BookmarkAPIView(viewsets.ViewSet,PaginationMixin):
     @extend_schema(**schemas.create_bookmark_schema)
     @action(detail=False, methods=['post'], url_path='create')
     def create_bookmark(self, request): 
@@ -58,50 +26,42 @@ class BookmarkAPIView(viewsets.ViewSet):
         if bookmark:
             return Response({"id": bookmark.id}, status=status_code)
         
-        return Response(errors, status=status_code)
-    
-    @extend_schema(**schemas.update_bookmark_schema)
-    @action(detail=False, methods=['patch'], url_path='update/(?P<id>[^/.]+)')
-    def update_bookmark(self, request, id=None):
-        try:
-            bookmark = Bookmark.objects.get(id=id)
-        except Bookmark.DoesNotExist:
-            return Response({"error": "Bookmark not found"}, 
-                        status=status.HTTP_404_NOT_FOUND)
-        
-    
-        allowed_fields = ['title', 'url', 'status', 'action_id', 'external_source']
-        data_to_update = {}
-        
-        for field in allowed_fields:
-            if field in request.data:
-                    data_to_update[field] = request.data[field]
-        
+        return Response({"error": errors}, status=status_code)
 
-        if not data_to_update:
+    @extend_schema(**schemas.update_bookmark_schema)
+    @action(detail=False, methods=['patch'], url_path='update/(?P<id>\\d+)')
+    def update_bookmark(self, request, id=None):
+        """
+        Actualiza un bookmark existente con datos parciales.
+        """
+        try:
+            numeric_id = int(id)
+        except (ValueError, TypeError):
             return Response(
-                {"error": "No valid fields to update."},
+                {"error": "Invalid bookmark ID format. Must be a number."},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        serializer = BookmarkSerializer(bookmark, data=data_to_update, partial=True)
+        success, result, status_code = BookmarkUpdatingService.update_bookmark(numeric_id, request.data)
         
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                {"message": "Bookmark updated successfully"},
-                status=status.HTTP_200_OK
-            )
+        return Response(result, status=status_code)
         
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
     @extend_schema(**schemas.delete_bookmark_schema)
-    @action(detail=False, methods=['delete'], url_path='delete/(?P<id>[^/.]+)/')
+    @action(detail=False, methods=['delete'], url_path='delete/(?P<id>\\d+)')
     def delete_bookmark(self, request, id=None):
         """
         Realiza un soft delete de un bookmark cambiando su estado a inactivo.
         """
-        success, error_msg = BookmarkUpdatingService.soft_delete_bookmark(id)
+        # Convertir ID a entero explícitamente para mayor seguridad
+        try:
+            numeric_id = int(id)
+        except (ValueError, TypeError):
+            return Response(
+                {"error": "Invalid bookmark ID format. Must be a number."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        success, error_msg = BookmarkUpdatingService.soft_delete_bookmark(numeric_id)
         
         if success:
             return Response(
@@ -113,3 +73,33 @@ class BookmarkAPIView(viewsets.ViewSet):
                 {"error": error_msg},
                 status=status.HTTP_404_NOT_FOUND
             )
+    
+    @extend_schema(**schemas.list_bookmarks_schema)
+    @action(detail=False, methods=['get'], url_path='list')
+    def list_bookmarks(self, request):
+        """Lista bookmarks con múltiples opciones de filtrado."""
+    
+        success, bookmarks, error_response = BookmarkRetrievalService.retrieve_bookmarks(
+            request.query_params
+        )
+        
+        if not success:
+            return error_response
+        
+        result = BookmarkProcessingService.process_bookmarks_with_actions(bookmarks)
+        return self.paginate_results(result, request)
+    
+    @extend_schema(**schemas.list_bookmarks_by_source_schema)
+    @action(detail=False, methods=['get'], url_path='by-source')
+    def list_bookmarks_by_source(self, request):
+        """Lista bookmarks por external_source_id con filtros opcionales."""
+        success, bookmarks, error_response = BookmarkRetrievalService.retrieve_bookmarks(
+            request.query_params,
+            required_params=['external_source_id']
+        )
+        
+        if not success:
+            return error_response
+        
+        result = BookmarkProcessingService.process_bookmarks_with_actions(bookmarks)
+        return self.paginate_results(result, request)
