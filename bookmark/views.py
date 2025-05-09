@@ -29,51 +29,35 @@ class BookmarkAPIView(viewsets.ViewSet,PaginationMixin):
         return Response({"error": errors}, status=status_code)
 
     @extend_schema(**schemas.update_bookmark_schema)
-    @action(detail=False, methods=['patch'], url_path='update/(?P<id>\\d+)')
+    @action(detail=False, methods=['patch'], url_path='update')
     def update_bookmark(self, request, id=None):
         """
         Actualiza un bookmark existente con datos parciales.
         """
-        try:
-            numeric_id = int(id)
-        except (ValueError, TypeError):
-            return Response(
-                {"error": "Invalid bookmark ID format. Must be a number."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        success, result, status_code = BookmarkUpdatingService.update_bookmark(numeric_id, request.data)
+   
+        bookmark_id = request.query_params.get('id')
+        external_source_id = request.query_params.get('external_source_id')     
+        result, status_code = BookmarkUpdatingService.update_bookmark(
+            bookmark_id,external_source_id, request.data)
         
         return Response(result, status=status_code)
         
     @extend_schema(**schemas.delete_bookmark_schema)
-    @action(detail=False, methods=['delete'], url_path='delete/(?P<id>\\d+)')
-    def delete_bookmark(self, request, id=None):
+    @action(detail=False, methods=['delete'], url_path='delete')
+    def delete_bookmark(self, request,):
         """
         Realiza un soft delete de un bookmark cambiando su estado a inactivo.
         """
-        # Convertir ID a entero explícitamente para mayor seguridad
-        try:
-            numeric_id = int(id)
-        except (ValueError, TypeError):
-            return Response(
-                {"error": "Invalid bookmark ID format. Must be a number."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        id = request.query_params.get('id')
+        external_source_id = request.query_params.get('external_source_id')
+ 
+        success, message , status_code= BookmarkUpdatingService.soft_delete_bookmark(
+            id, external_source_id
+        )
         
-        success, error_msg = BookmarkUpdatingService.soft_delete_bookmark(numeric_id)
+        response_data = {"message": message} if success else {"error": message}
+        return Response(response_data, status=status_code)
         
-        if success:
-            return Response(
-                {"message": "Bookmark deleted successfully"},
-                status=status.HTTP_200_OK
-            )
-        else:
-            return Response(
-                {"error": error_msg},
-                status=status.HTTP_404_NOT_FOUND
-            )
-    
     @extend_schema(**schemas.list_bookmarks_schema)
     @action(detail=False, methods=['get'], url_path='list')
     def list_bookmarks(self, request):

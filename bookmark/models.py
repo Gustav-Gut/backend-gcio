@@ -35,7 +35,7 @@ class Action(models.Model):
         managed = False
 
 class Bookmark(models.Model):
-    id = models.AutoField(primary_key=True) 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     external_source = models.ForeignKey(
         ExternalSource, 
         on_delete=models.CASCADE, 

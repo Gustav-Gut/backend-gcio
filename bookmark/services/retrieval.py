@@ -149,8 +149,6 @@ class BookmarkRetrievalService:
                     filters['status'] = True
                 elif status_param.lower() == 'false':
                     filters['status'] = False
-            else:
-                filters['status'] = True  # Por defecto mostrar solo activos
             
             # Procesar action_id - opcional
             action_id = query_params.get('action_id')

@@ -1,11 +1,11 @@
 services:
   web:
     build: .
-    command: ./wait-for-db.sh db python manage.py runserver 0.0.0.0:8002
+    command: ./wait-for-db.sh db python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
-      - "8002:8002"
+      - "8002:8000"
     depends_on:
       - db
     env_file:
@@ -42,3 +42,4 @@ networks:
   kong-net:
     name: kong-net
     driver: bridge
+    
