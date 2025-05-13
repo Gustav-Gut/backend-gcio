@@ -36,7 +36,7 @@ class AuthViewSet(viewsets.ViewSet):
     def refresh(self, request):
         """
         Endpoint para refrescar un JWT existente.
-        Recibe en el body: refresh_token
+        Recibe: refresh_token
         """
         old_refresh_token = request.data.get('refresh_token')
         if not old_refresh_token:
