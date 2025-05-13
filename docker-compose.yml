@@ -1,18 +1,18 @@
 services:
-  web:
+  api:
     build: .
-    command: ./wait-for-db.sh db python manage.py runserver 0.0.0.0:8002
+    command: ./wait-for-db.sh api-db python manage.py runserver 0.0.0.0:8005
     volumes:
       - .:/app
     ports:
-      - "8002:8002"
+      - "8005:8005"
     depends_on:
-      - db
+      - api-db
     env_file:
       - .env
     networks:
       - kong-net
-  db:
+  api-db:
     image: mariadb:11.4
     restart: always
     env_file:
@@ -20,23 +20,23 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - db_data:/var/lib/mysql
+      - api-db-data:/var/lib/mysql
     networks:
       - kong-net
-  tests:
+  api-tests:
     build: .
-    command: ["sh", "-c", "./wait-for-db.sh db && pytest"]
+    command: ["sh", "-c", "./wait-for-db.sh api-db && pytest"]
     volumes:
       - .:/app
     depends_on:
-      - db
+      - api-db
     env_file:
       - .env
     networks:
       - kong-net
 
 volumes:
-  db_data:
+  api-db-data:
 
 networks:
   kong-net:

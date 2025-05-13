@@ -2,9 +2,9 @@ Django==5.1.7
 djangorestframework==3.15.2
 django-filter==25.1
 drf-spectacular==0.28.0
-djangorestframework-simplejwt==5.5.0
 markdown==3.7
 mysqlclient==2.2.7
+PyJWT==2.10.1
 
 # Dependencias de testing
 pytest>=7.0
