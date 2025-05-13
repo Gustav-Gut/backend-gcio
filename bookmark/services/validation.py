@@ -191,3 +191,39 @@ class BookmarkValidationService:
             return False, "Bookmark not found", status.HTTP_404_NOT_FOUND
         except Exception as e:
             return False, f"An error occurred: {str(e)}", status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    @staticmethod
+    def validate_active_status(model, identifier, id_field='id', model_name=None):
+        """
+        Valida que un registro exista y tenga su estado activo (status=True)
+        
+        Args:
+            model: Modelo Django a validar
+            identifier: Valor del identificador a buscar
+            id_field: Campo que contiene el identificador (default: 'id')
+            model_name: Nombre descriptivo para los mensajes de error
+        
+        Returns:
+            tuple: (is_valid, model_instance, error_message)
+                - is_valid: Boolean indicando si la validación fue exitosa
+                - model_instance: Instancia del modelo si existe y está activo, None si no
+                - error_message: None si es válido, mensaje de error si no lo es
+        """
+        if model_name is None:
+            model_name = model.__name__
+            
+        try:
+            # Buscar el objeto por su identificador
+            filters = {id_field: identifier}
+            instance = model.objects.get(**filters)
+            
+            # Verificar si está activo
+            if hasattr(instance, 'status') and not instance.status:
+                return False, None, f"The {model_name} is not active"
+            
+            return True, instance, None
+            
+        except model.DoesNotExist:
+            return False, None, f"{model_name} not found"
+        except Exception as e:
+            return False, None, f"Error validating {model_name}: {str(e)}"

@@ -1,6 +1,7 @@
 import uuid
 from rest_framework import status
-from bookmark.models import Action, Bookmark
+
+from bookmark.models import Action, Bookmark, ExternalSource  # Updated relative import
 from ..serializers import BookmarkSerializer  
 from ..services import BookmarkValidationService# Updated relative import
 
@@ -28,6 +29,19 @@ class BookmarkUpdatingService:
         is_valid, error = BookmarkValidationService.validate_uuid_format(action_id, 'action_id')
         if not is_valid:
             return None, error, 400
+        
+        is_valid, external_source, error = BookmarkValidationService.validate_active_status(
+            ExternalSource, external_source_id, model_name="External Source"
+        )
+        if not is_valid:
+            return None, error, 404
+        
+        # Validar que la acción existe y está activa
+        is_valid, action, error = BookmarkValidationService.validate_active_status(
+            Action, action_id, model_name="Action"
+        )
+        if not is_valid:
+            return None, error, 404
         
          # Validar que la acción pertenece a la external_source indicada
         try:
