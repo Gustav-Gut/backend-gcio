@@ -2,6 +2,6 @@
 from rest_framework import serializers
 
 class LoginSerializer(serializers.Serializer):
-    rut_cliente = serializers.CharField(required=True)
-    id_inmobiliaria = serializers.IntegerField(required=True)
+    user_rut = serializers.CharField(required=True)
+    agency_id = serializers.IntegerField(required=True)
     password = serializers.CharField(write_only=True, required=True)

@@ -1,8 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
+
 from .serializers import LoginSerializer
 from .services import AuthenticateService
 
@@ -11,8 +10,8 @@ class AuthViewSet(viewsets.ViewSet):
     def login(self, request):
         """
         Endpoint para autenticar al usuario.
-        Recibe: rut_cliente, id_inmobiliaria y password.
-        Retorna: tokens refresh y access.
+        Recibe: user_rut, agency_id y password.
+        Retorna: access_token, refresh_token.
         """
         serializer = LoginSerializer(data=request.data)
         if not serializer.is_valid():
@@ -20,36 +19,34 @@ class AuthViewSet(viewsets.ViewSet):
         
         data = serializer.validated_data
         user, error = AuthenticateService.authenticate_user_dynamic(
-            client_rut=data["rut_cliente"],
-            agency_id=data["id_inmobiliaria"],
+            user_rut=data["user_rut"],
+            agency_id=data["agency_id"],
             password=data["password"]
         )
         if error:
             return Response({"detail": error}, status=status.HTTP_401_UNAUTHORIZED)
         
-        # Genera los tokens utilizando simplejwt
-        refresh = RefreshToken.for_user(user)
+        access_token, refresh_token = AuthenticateService.generate_jwt(user, data["agency_id"])
         return Response({
-            "refresh": str(refresh),
-            "access": str(refresh.access_token)
-        }, status=status.HTTP_200_OK)
+            "access_token": access_token, 
+            "refresh_token": refresh_token
+            }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], url_path='refresh')
     def refresh(self, request):
         """
-        Endpoint para refrescar el token.
-        Se delega la lógica en la vista estándar TokenRefreshView.
+        Endpoint para refrescar un JWT existente.
+        Recibe en el body: refresh_token
         """
-        # Como estamos en un action, para reutilizar la vista de simplejwt,
-        # extraemos la request original (tipo HttpRequest) de request._request.
-        view = TokenRefreshView.as_view()
-        return view(request._request)
+        old_refresh_token = request.data.get('refresh_token')
+        if not old_refresh_token:
+            return Response({'detail': 'No se proporcionó refresh token.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post'], url_path='verify')
-    def verify(self, request):
-        """
-        Endpoint para verificar la validez de un token.
-        Se delega la lógica en la vista estándar TokenVerifyView.
-        """
-        view = TokenVerifyView.as_view()
-        return view(request._request)
+        access_token, refresh_token, error = AuthenticateService.refresh_jwt(old_refresh_token)
+        if error:
+            return Response({'detail': error}, status=status.HTTP_401_UNAUTHORIZED)
+
+        return Response({
+            "access_token": access_token, 
+            "refresh_token": refresh_token
+            }, status=status.HTTP_200_OK)
