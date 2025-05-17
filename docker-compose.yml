@@ -1,5 +1,7 @@
 services:
   api:
+    environment:
+      - PYTHONUNBUFFERED=1
     build: .
     command: ./wait-for-db.sh api-db python manage.py runserver 0.0.0.0:8005
     volumes:

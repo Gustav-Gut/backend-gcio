@@ -131,3 +131,23 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'GCI API for PlanOk. Implemented with Django Rest Framework and drf-spectacular.',
     'VERSION': '1.0.0',
 }
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'seed.services': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'authentication.middleware': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+    },
+}
