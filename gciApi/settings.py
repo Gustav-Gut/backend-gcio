@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'drf_spectacular',
+    'core',
     'authentication',
     'seed'
 ]
@@ -41,7 +42,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'authentication.middleware.KongHeadersMiddleware',
+    'core.middlewares.kong.KongHeadersMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
