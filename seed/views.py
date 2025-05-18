@@ -7,12 +7,6 @@ from .serializers import PortalTypesSerializer
 class SeedAPIView(viewsets.ViewSet):
     @action(detail=False, methods=['get'], url_path='recover-portal-types')
     def recover_all_portal_types(self, request):
-        portal_types = SeedServices.get_portal_type()
-        serializer = PortalTypesSerializer(portal_types, many=True)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['get'], url_path='recover-one-portal-types')
-    def recover_one_portal_types(self, request):
-        portal_types = SeedServices.get_portal_type()
+        portal_types = SeedServices.get_portal_type(request)
         serializer = PortalTypesSerializer(portal_types, many=True)
         return Response(serializer.data)
