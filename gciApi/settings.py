@@ -36,7 +36,8 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'apps.core',
     'apps.authentication',
-    'apps.seed'
+    'apps.seed',
+    'apps.follow_up',
 ]
 
 MIDDLEWARE = [
