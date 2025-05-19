@@ -1,11 +1,14 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.versioning import URLPathVersioning
 
 from .serializers import LoginSerializer
 from .services import AuthenticateService
 
 class AuthViewSet(viewsets.ViewSet):
+    versioning_class = URLPathVersioning
+
     @action(detail=False, methods=['post'], url_path='login')
     def login(self, request):
         """
