@@ -6,7 +6,7 @@ from .serializers import PortalTypesSerializer
 
 class SeedAPIView(viewsets.ViewSet):
     @action(detail=False, methods=['get'], url_path='recover-portal-types')
-    def recover_all_portal_types(self, request):
+    def recover_all_portal_types(self, request, *args, **kwargs):
         portal_types = SeedServices.get_portal_type(request)
         serializer = PortalTypesSerializer(portal_types, many=True)
         return Response(serializer.data)

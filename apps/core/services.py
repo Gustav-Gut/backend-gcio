@@ -69,9 +69,10 @@ class DatabasesUtils:
     @staticmethod
     def cleanup_unused_connections():
         current_time = time.time()
+        connection_timeout = int(os.environ.get('CONNECTION_TIMEOUT', 3600))
         for alias in list(settings.DATABASES.keys()):
             if alias.startswith(('gci_', 'gcli_')):
                 last_used = getattr(connections[alias], 'last_used', 0)
-                if current_time - last_used > os.environ.get('CONNECTION_TIMEOUT', 3600):
+                if current_time - last_used > connection_timeout:
                     connections[alias].close()
                     del settings.DATABASES[alias]

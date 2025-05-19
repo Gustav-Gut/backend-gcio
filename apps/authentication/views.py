@@ -10,7 +10,7 @@ class AuthViewSet(viewsets.ViewSet):
     versioning_class = URLPathVersioning
 
     @action(detail=False, methods=['post'], url_path='login')
-    def login(self, request):
+    def login(self, request, *args, **kwargs):
         """
         Endpoint para autenticar al usuario.
         Recibe: user_rut, agency_id y password.
@@ -36,7 +36,7 @@ class AuthViewSet(viewsets.ViewSet):
             }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], url_path='refresh')
-    def refresh(self, request):
+    def refresh(self, request, *args, **kwargs):
         """
         Endpoint para refrescar un JWT existente.
         Recibe: refresh_token
