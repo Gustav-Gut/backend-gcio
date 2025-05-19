@@ -1,8 +1,8 @@
 from .models import PortalTypes
 
 import logging
-from pprint import pformat
 logger = logging.getLogger(__name__)
+
 class SeedServices:
     @staticmethod
     def get_portal_type(request):

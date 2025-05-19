@@ -42,7 +42,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'middlewares.kong.KongHeadersMiddleware',
+    'apps.core.middlewares.kong.KongHeadersMiddleware',
+    'apps.core.middlewares.databases.DynamicDatabaseMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -79,6 +80,8 @@ DATABASES = {
         'PORT': os.environ.get('DB_PORT', '3306'),
     },
 }
+
+DATABASE_ROUTERS = ['apps.core.routers.databases.AgencyDatabaseRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -125,6 +128,10 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': (),
     'DEFAULT_PERMISSION_CLASSES': (),
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
+    'DEFAULT_VERSION': 'v1',
+    'ALLOWED_VERSIONS': ['v1'],
+    'VERSION_PARAM': 'version',
 }
 
 SPECTACULAR_SETTINGS = {

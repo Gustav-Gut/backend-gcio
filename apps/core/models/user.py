@@ -1,6 +1,8 @@
 from django.db import models
 
 class User(models.Model):
+    database = 'gci'
+
     rut = models.IntegerField(blank=False, null=False, primary_key=True, db_column='rut')
     name = models.CharField(max_length=100, blank=False, null=False, db_column='nombre')
     lastname = models.CharField(max_length=100, blank=False, null=False, db_column='apellido1')

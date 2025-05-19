@@ -4,50 +4,42 @@ import os
 import jwt
 import datetime
 from types import SimpleNamespace
-from django.conf import settings
-from django.db import connections
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.hashers import check_password
 
 from .models import Agency, User
+from apps.core.services import DatabasesUtils
+
 class AuthenticateService:
    
     @staticmethod
     def authenticate_user_dynamic(user_rut, agency_id, password):
         """
-        1. Con el agency_id, busca el nombre en la base default (modelo Inmobiliaria).
-        2. Construye el alias de la base de datos dinámica: 'gci_{nombre_inmobiliaria}'.
-        3. Usa esa conexión para consultar la tabla 'usuario' y verificar las credenciales.
-        Retorna (usuario, None) si es exitoso, o (None, error_message) en caso contrario.
+        1. Obtiene la agencia de la base default
+        2. Configura las conexiones dinámicas y guarda la agencia actual
+        3. Busca al usuario en la base de datos dinámica
+        4. Retorna el usuario si existe, None si no
         """
         try:
-            # Buscar la inmobiliaria en la base de datos default
+            # Obtener la agencia de la base default
             agency = Agency.objects.using('default').get(id=agency_id)
-        except ObjectDoesNotExist:
-            return None, "Inmobiliaria no encontrada."
-
-        # Construir el alias de la base de datos dinámica
-        db_alias = f"gci_{agency.name.lower()}"
-
-        # Obtener la conexión dinámica
-        _AuthenticateUtils.get_dynamic_db_connection(db_alias)
-
-        try:
-            # Buscar al usuario en la base de datos dinámica usando el alias
-            user = User.objects.using(db_alias).get(rut=user_rut)
-        except ObjectDoesNotExist:
-            return None, "Usuario no encontrado en la base de datos dinámica."
-        
-        # # Verificar el password (se supone que 'user.password' contiene el hash)
-        # stored_hash = user.password
-        # if stored_hash.startswith("$2y$"):
-        #     print("user password ---->", stored_hash)
-        #     stored_hash = "$2b$" + stored_hash[4:]
             
-        # if not check_password(password, stored_hash):
-        #     return None, "Credenciales inválidas."
-
-        return user, None
+            # Configurar las conexiones dinámicas y guardar la agencia actual
+            db_alias_gci = f"gci_{agency.name.lower()}"
+            db_alias_gcli = f"gcli_{agency.name.lower()}"
+            
+            DatabasesUtils.get_dynamic_db_connection(db_alias_gci)
+            DatabasesUtils.get_dynamic_db_connection(db_alias_gcli)
+            DatabasesUtils.set_current_agency(agency)
+            
+            # Buscar al usuario en la base de datos dinámica
+            user = User.objects.get(rut=user_rut)
+            return user, None
+            
+        except Agency.DoesNotExist:
+            return None, "Inmobiliaria no encontrada."
+        except User.DoesNotExist:
+            return None, "Usuario no encontrado en la base de datos dinámica."
     
     @staticmethod
     def generate_jwt(user, agency_id):
@@ -102,34 +94,3 @@ class AuthenticateService:
         )
 
         return new_acess_token, new_refresh_token, None
-
-class _AuthenticateUtils:
-    """
-    Clase para manejar conexiones a bases de datos dinámicas.
-    """
-    @staticmethod
-    def get_dynamic_db_connection(db_alias):
-        """
-        Dado el nombre de la inmobiliaria (por ejemplo, 'besalco'),
-        construye el alias 'gci_besalco' y, si no existe en settings.DATABASES,
-        lo agrega con la configuración necesaria.
-        """
-        if db_alias not in settings.DATABASES:
-            # Agregar la configuración dinámica
-            settings.DATABASES[db_alias] = {
-                'ENGINE': 'django.db.backends.mysql',
-                'NAME': db_alias,
-                'USER': os.environ.get('MYSQL_USER', 'default_user'),
-                'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'default_password'),
-                'HOST': os.environ.get('DB_HOST', 'db'),
-                'PORT': os.environ.get('DB_PORT', '3306'),
-                'TIME_ZONE': settings.TIME_ZONE,
-                'CONN_HEALTH_CHECKS': True,
-                'CONN_MAX_AGE': getattr(settings, 'CONN_MAX_AGE', 0),
-                'OPTIONS': {},
-                'AUTOCOMMIT': True,
-                'ATOMIC_REQUESTS': False,
-                
-            }
-        return connections[db_alias]
-        
