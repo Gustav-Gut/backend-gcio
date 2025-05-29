@@ -5,7 +5,7 @@ from .task_status import TaskStatus
 class TaskHistory(models.Model):
     database = 'gcli'
 
-    task_history_id = models.AutoField(primary_key=True, db_column='id_historial_tarea')
+    id = models.AutoField(primary_key=True, db_column='id_historial_tarea')
     task_id = models.ForeignKey(Task, on_delete=models.CASCADE, db_column='id_tarea', related_name='task_history')
     task_status_id = models.ForeignKey(TaskStatus, on_delete=models.CASCADE, db_column="id_estado_tarea")
     previous_assigned_username = models.CharField(max_length=30, blank=True, null=True, db_column='username_sso_antes_reasignacion')
