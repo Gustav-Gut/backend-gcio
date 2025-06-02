@@ -47,6 +47,12 @@ class DatabasesUtils:
         construye el alias 'gci_besalco' y, si no existe en settings.DATABASES,
         lo agrega con la configuración necesaria.
         """
+
+        if db_alias.startswith('gcli_'):
+            host = os.environ.get('DB_HOST_GCLI', 'localhost')
+        else:
+            host = os.environ.get('DB_HOST_GCI', 'localhost')
+    
         if db_alias not in settings.DATABASES:
             # Agregar la configuración dinámica
             settings.DATABASES[db_alias] = {
@@ -54,7 +60,7 @@ class DatabasesUtils:
                 'NAME': db_alias,
                 'USER': os.environ.get('MYSQL_USER', 'default_user'),
                 'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'default_password'),
-                'HOST': os.environ.get('DB_HOST', 'db'),
+                'HOST': host,
                 'PORT': os.environ.get('DB_PORT', '3306'),
                 'TIME_ZONE': settings.TIME_ZONE,
                 'CONN_HEALTH_CHECKS': True,

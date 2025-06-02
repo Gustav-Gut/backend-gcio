@@ -36,7 +36,8 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'apps.core',
     'apps.authentication',
-    'apps.seed'
+    'apps.seed',
+    'apps.follow_up',
 ]
 
 MIDDLEWARE = [
@@ -73,10 +74,10 @@ DATABASES = {
     # using the authentication service's get_dynamic_db_connection().
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('MYSQL_DATABASE', 'default_db'),
+        'NAME': os.environ.get('MYSQL_DATABASE_DEFAULT', 'default_db'),
         'USER': os.environ.get('MYSQL_USER', 'default_user'),
         'PASSWORD': os.environ.get('MYSQL_PASSWORD', 'default_password'),
-        'HOST': os.environ.get('DB_HOST', 'db'),
+        'HOST': os.environ.get('DB_HOST_GCI', 'db'),
         'PORT': os.environ.get('DB_PORT', '3306'),
     },
 }
@@ -154,6 +155,10 @@ LOGGING = {
             'level': 'DEBUG',
         },
         'authentication.middleware': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
+        'follow_up.services': {
             'handlers': ['console'],
             'level': 'DEBUG',
         },
