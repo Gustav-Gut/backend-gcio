@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'apps.authentication',
     'apps.seed',
     'apps.follow_up',
+    'apps.user',
 ]
 
 MIDDLEWARE = [
