@@ -5,8 +5,14 @@ logger = logging.getLogger('follow_up.services')
 
 class UserService:
     @staticmethod
-    def get_info(user_rut: int):
+    def get_info(user_rut: str):
         """
-        Función base para obtener info del usuario.
+        Obtiene la información de un usuario por su RUT.
+
+        Args:
+            user_rut (str): RUT del usuario
+
+        Returns:
+            User: Instancia del usuario
         """
-        return User.objects.filter(rut=user_rut)
+        return User.objects.get(rut=user_rut)
