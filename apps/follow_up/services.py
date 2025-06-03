@@ -178,9 +178,11 @@ class FollowUpService:
 
             if client:
                 if client.type == 'NATURAL':
+                    client_id = client.id
                     rut = format_rut(client.person_rut, client.person_rut_dv)
                     name = f"{client.person_name.strip()} {client.person_lastname.strip()}".strip().title()
                 else:
+                    client_id = client.id
                     rut = format_rut(client.company_rut, client.company_rut_dv)
                     name = client.company_name.strip().title()
             
@@ -188,6 +190,7 @@ class FollowUpService:
 
             table_data.append({
                 'id': task.id,
+                'clientId': client_id,
                 'rut': rut,
                 'name': name,
                 'project': evaluation.project_id.label.strip().title() if evaluation and evaluation.project_id else None,
