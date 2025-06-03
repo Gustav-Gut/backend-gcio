@@ -24,6 +24,8 @@ urlpatterns = [
         path('', include('apps.seed.urls')),
         path('', include('apps.authentication.urls')),
         path('', include('apps.follow_up.urls')),
-        path('', include('apps.user.urls'))
+        path('', include('apps.user.urls')),
+        path('', include('apps.event.urls')),
+        path('', include('apps.agency.urls')),
     ]))
 ]

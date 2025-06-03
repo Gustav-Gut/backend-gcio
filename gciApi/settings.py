@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'apps.seed',
     'apps.follow_up',
     'apps.user',
+    'apps.event',
+    'apps.agency',
 ]
 
 MIDDLEWARE = [
