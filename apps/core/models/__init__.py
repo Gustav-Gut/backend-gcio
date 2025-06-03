@@ -3,6 +3,7 @@ from .agency import Agency
 from .portal_types import PortalTypes
 from .evaluation import Evaluation
 from .client import Client
+from .event import PersonalEvent
 
 __all__ = [
     'UserGci',
@@ -11,4 +12,5 @@ __all__ = [
     'PortalTypes',
     'Evaluation',
     'Client',
+    'PersonalEvent',
     ]
