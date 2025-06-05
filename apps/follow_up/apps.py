@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class SeedConfig(AppConfig):
+class FollowUpConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'seed'
+    name = 'apps.follow_up'

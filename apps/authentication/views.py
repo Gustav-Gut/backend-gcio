@@ -1,13 +1,16 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.versioning import URLPathVersioning
 
 from .serializers import LoginSerializer
 from .services import AuthenticateService
 
 class AuthViewSet(viewsets.ViewSet):
+    versioning_class = URLPathVersioning
+
     @action(detail=False, methods=['post'], url_path='login')
-    def login(self, request):
+    def login(self, request, *args, **kwargs):
         """
         Endpoint para autenticar al usuario.
         Recibe: user_rut, agency_id y password.
@@ -33,7 +36,7 @@ class AuthViewSet(viewsets.ViewSet):
             }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], url_path='refresh')
-    def refresh(self, request):
+    def refresh(self, request, *args, **kwargs):
         """
         Endpoint para refrescar un JWT existente.
         Recibe: refresh_token
