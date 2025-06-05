@@ -1,8 +1,8 @@
-from bookmark.services.validation import BookmarkValidationService
-from ..models import Bookmark, Action  # Updated relative import
+from apps.bookmark.services.validation import BookmarkValidationService
+from apps.bookmark.models import Action, Bookmark 
 from rest_framework import status
 from rest_framework.response import Response
-from ..serializers import BookmarkSerializer
+
 
 class BookmarkRetrievalService:
     @staticmethod

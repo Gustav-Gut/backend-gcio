@@ -1,6 +1,5 @@
 from django.shortcuts import render
-from bookmark.services import (
-    BookmarkValidationService,
+from apps.bookmark.services import (
     BookmarkRetrievalService,
     BookmarkProcessingService,
     BookmarkUpdatingService,
@@ -9,8 +8,6 @@ from . import schemas
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from .models import Bookmark,Action
-from .serializers import BookmarkSerializer, ActionSerializer
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 from .pagination import PaginationMixin
 

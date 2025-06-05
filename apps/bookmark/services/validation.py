@@ -1,7 +1,8 @@
 import uuid
+from apps.bookmark.models import Bookmark
 from rest_framework import status
 from rest_framework.response import Response
-from ..models import Bookmark
+
 
 class BookmarkValidationService:
 

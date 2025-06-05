@@ -1,9 +1,8 @@
-import uuid
 from rest_framework import status
 
-from bookmark.models import Action, Bookmark, ExternalSource  # Updated relative import
+from apps.bookmark.models import Action, Bookmark, ExternalSource  
 from ..serializers import BookmarkSerializer  
-from ..services import BookmarkValidationService# Updated relative import
+from ..services import BookmarkValidationService
 
 class BookmarkUpdatingService:
     @staticmethod
