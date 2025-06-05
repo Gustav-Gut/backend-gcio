@@ -65,3 +65,16 @@ class GeneralEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = GeneralEvent
         fields = ['id', 'description', 'title', 'time', 'date']
+
+class OfferExpirationSerializer(serializers.Serializer):
+    duracion_oferta = serializers.IntegerField()
+    id_oferta = serializers.IntegerField()
+    id_producto = serializers.IntegerField()
+    glosa_proyecto = serializers.CharField()
+    fecha_termino = serializers.SerializerMethodField()
+    aprobada = serializers.BooleanField()
+
+    def get_fecha_termino(self, obj):
+        if obj['fecha_termino']:
+            return obj['fecha_termino'].strftime("%d-%m-%Y")
+        return None
